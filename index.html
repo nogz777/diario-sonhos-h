@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário de Sonhos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="img/favicon-diario-de-sonhos.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-diario-de-sonhos.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-diario-de-sonhos.ico">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neo-light': '#f0f0f3',
+                        'neo-dark': '#d1d9e6',
+                        'purple-soft': '#8b5fbf'
+                    },
+                    boxShadow: {
+                        'neomorphism': '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                        'neomorphism-inset': 'inset 8px 8px 16px #d1d9e6, inset -8px -8px 16px #ffffff',
+                        'neomorphism-hover': '12px 12px 20px #d1d9e6, -12px -12px 20px #ffffff'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 100%);
+        }
+        
+        .neomorphism-element {
+            background: #f0f0f3;
+            border-radius: 20px;
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .neomorphism-element:hover {
+            box-shadow: 12px 12px 20px #d1d9e6, -12px -12px 20px #ffffff;
+            transform: translateY(-2px);
+        }
+        
+        .neomorphism-inset {
+            background: #f0f0f3;
+            border-radius: 15px;
+            box-shadow: inset 8px 8px 16px #d1d9e6, inset -8px -8px 16px #ffffff;
+        }
+        
+        .logo-text {
+            background: linear-gradient(135deg, #8b5fbf, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="w-full px-8 py-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo -->
+            <div class="w-24 h-24"> <!-- Tamanho ideal para header -->
+                <img src="img/logo - diario de sonhos.png" class="w-full h-full object-contain">
+            </div>
+            
+            <!-- Login Section -->
+            <div class="flex gap-4">
+                <button onclick="redirectToLogin()" class="neomorphism-element px-6 py-3 text-gray-700 font-medium hover:text-purple-soft transition-colors">
+                    Entrar ou Cadastrar
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="flex-1 px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-200px)]">
+                <!-- Left Side - Image -->
+                <div class="flex justify-center lg:justify-start">
+                    <div class="p-5 max-w-md">
+                        <div class="p-8 text-center">
+                            <!-- Placeholder para imagem - você pode substituir por uma imagem real -->
+                            <div class="w-full h-120 rounded-xl flex items-center justify-center">
+                                <img src="img/img - tela principal.png">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - CTA Button -->
+                <div class="flex flex-col justify-center items-center lg:items-start space-y-8">
+                    <div class="text-center lg:text-left">
+                        <h2 class="text-4xl lg:text-5xl font-bold text-gray-800 mb-4 leading-tight">
+                            Transforme seus sonhos 
+                            <span class="logo-text">em descobertas</span>
+                        </h2>
+                        <p class="text-xl text-gray-600 mb-8 max-w-lg">
+                            Sua jornada de autoconhecimento começa quando você fecha os olhos.
+                        </p>
+                    </div>
+                    
+                    <!-- Botão Principal -->
+                    <button onclick="redirectToLogin()" class="group relative overflow-hidden bg-gradient-to-r from-purple-400 to-purple-600 text-white px-12 py-6 rounded-[45px] font-bold text-xl shadow-neomorphism hover:shadow-neomorphism-hover transform hover:scale-105 transition-all duration-300">
+                        <span class="relative z-10">Descubra seus sonhos!</span>
+                        <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        function redirectToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        // Adicionar interatividade aos botões
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Efeito de ripple
+                    const ripple = document.createElement('div');
+                    const rect = button.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    button.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>

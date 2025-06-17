@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Diário de Sonhos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/x-icon" href="img/favicon-diario-de-sonhos.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-diario-de-sonhos.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-diario-de-sonhos.ico">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neo-light': '#f0f0f3',
+                        'neo-dark': '#d1d9e6',
+                        'purple-soft': '#8b5fbf'
+                    },
+                    boxShadow: {
+                        'neomorphism': '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                        'neomorphism-inset': 'inset 8px 8px 16px #d1d9e6, inset -8px -8px 16px #ffffff',
+                        'neomorphism-hover': '12px 12px 20px #d1d9e6, -12px -12px 20px #ffffff',
+                        'glass': '0 8px 32px 0 rgba(139, 95, 191, 0.37)',
+                        'glass-inset': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.2)'
+                    },
+                    backdropBlur: {
+                        'glass': '12px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 100%);
+        }
+        
+        .neomorphism-element {
+            background: #f0f0f3;
+            border-radius: 20px;
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .neomorphism-element:hover {
+            box-shadow: 12px 12px 20px #d1d9e6, -12px -12px 20px #ffffff;
+        }
+        
+        .neomorphism-inset {
+            background: #f0f0f3;
+            border-radius: 15px;
+            box-shadow: inset 8px 8px 16px #d1d9e6, inset -8px -8px 16px #ffffff;
+            border: none;
+            outline: none;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(139, 95, 191, 0.37);
+        }
+        
+        .glass-input {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+        }
+        
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(139, 95, 191, 0.5);
+            outline: none;
+        }
+        
+        .dream-card {
+            transition: all 0.3s ease;
+        }
+        
+        .dream-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .mood-bom { border-left: 4px solid #10b981; }
+        .mood-confuso { border-left: 4px solid #f59e0b; }
+        .mood-ruim { border-left: 4px solid #ef4444; }
+        
+        .modal {
+            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="w-full px-8 py-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo e Título -->
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-full">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <img src="img/logo - diario de sonhos.png" alt="Logo" class="w-full h-full object-contain">
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Diário de Sonhos</h1>
+                    <p class="text-gray-600" id="welcomeMessage">Carregando...</p>
+                </div>
+            </div>
+            
+            <!-- User Actions -->
+            <div class="flex items-center space-x-4">
+                <button onclick="showAddDreamModal()" class="neomorphism-element px-6 py-3 text-purple-soft font-medium hover:text-purple-600 transition-colors">
+                    + Novo Sonho
+                </button>
+                <button onclick="logout()" class="neomorphism-element px-4 py-3 text-gray-700 font-medium hover:text-red-500 transition-colors">
+                    Sair
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="px-8 pb-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Dashboard Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="neomorphism-element p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Total de Sonhos</h3>
+                    <p class="text-3xl font-bold text-purple-soft" id="totalDreams">0</p>
+                </div>
+                <div class="neomorphism-element p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Sonhos Bons</h3>
+                    <p class="text-3xl font-bold text-green-500" id="goodDreams">0</p>
+                </div>
+                <div class="neomorphism-element p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Sonhos Confusos</h3>
+                    <p class="text-3xl font-bold text-yellow-500" id="confusedDreams">0</p>
+                </div>
+                <div class="neomorphism-element p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Sonhos Ruins</h3>
+                    <p class="text-3xl font-bold text-red-500" id="badDreams">0</p>
+                </div>
+            </div>
+            
+            <!-- Sleep Quality Analysis -->
+            <div class="neomorphism-element p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Análise da Qualidade do Sono</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl mb-2" id="sleepEmoji">😴</div>
+                        <p class="text-lg font-semibold" id="sleepStatus">Analisando...</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Qualidade Média</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-purple-400 to-purple-600 h-3 rounded-full transition-all duration-300" id="qualityBar" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1" id="qualityText">0/5</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Sonhos Lúcidos</h4>
+                        <p class="text-2xl font-bold text-indigo-500" id="lucidDreams">0</p>
+                        <p class="text-sm text-gray-600" id="lucidPercentage">0%</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dreams History -->
+            <div class="neomorphism-element p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Histórico de Sonhos</h3>
+                    <div class="flex space-x-2">
+                        <select id="filterMood" class="neomorphism-inset px-3 py-2 text-gray-700" onchange="filterDreams()">
+                            <option value="">Todos</option>
+                            <option value="bom">Bons</option>
+                            <option value="confuso">Confusos</option>
+                            <option value="ruim">Ruins</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="dreamsContainer" class="space-y-4">
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="text-6xl mb-4">🌙</div>
+                        <p class="text-lg">Nenhum sonho registrado ainda</p>
+                        <button onclick="showAddDreamModal()" class="mt-4 px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                            Registrar primeiro sonho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Modal para adicionar/editar sonho -->
+    <div id="dreamModal" class="fixed inset-0 modal hidden items-center justify-center z-50">
+        <div class="glass-morphism p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800" id="modalTitle">Novo Sonho</h2>
+                <button onclick="closeDreamModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            
+            <form id="dreamForm" class="space-y-6">
+                <input type="hidden" id="dreamId" value="">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Título do Sonho</label>
+                    <input type="text" id="dreamTitle" required class="glass-input w-full px-4 py-3 text-gray-700 placeholder-gray-500" placeholder="Ex: Sonho sobre voar">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data do Sonho</label>
+                    <input type="date" id="dreamDate" required class="glass-input w-full px-4 py-3 text-gray-700">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Como foi o sonho?</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <label class="glass-input p-4 cursor-pointer text-center transition-all hover:bg-white/30">
+                            <input type="radio" name="mood" value="bom" class="hidden">
+                            <div class="text-2xl mb-2">😊</div>
+                            <span class="text-sm font-medium">Bom</span>
+                        </label>
+                        <label class="glass-input p-4 cursor-pointer text-center transition-all hover:bg-white/30">
+                            <input type="radio" name="mood" value="confuso" class="hidden">
+                            <div class="text-2xl mb-2">😕</div>
+                            <span class="text-sm font-medium">Confuso</span>
+                        </label>
+                        <label class="glass-input p-4 cursor-pointer text-center transition-all hover:bg-white/30">
+                            <input type="radio" name="mood" value="ruim" class="hidden">
+                            <div class="text-2xl mb-2">😰</div>
+                            <span class="text-sm font-medium">Ruim</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+
+                    <input type="hidden" id="sleepQuality" value="3">
+                </div>
+                
+                <div>
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" id="isLucid" class="w-4 h-4 text-purple-600 rounded">
+                        <span class="text-sm font-medium text-gray-700">Foi um sonho lúcido? 🧠</span>
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição do Sonho</label>
+                    <textarea id="dreamDescription" rows="6" class="glass-input w-full px-4 py-3 text-gray-700 placeholder-gray-500" placeholder="Conte todos os detalhes que conseguir lembrar..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tags (separadas por vírgula)</label>
+                    <input type="text" id="dreamTags" class="glass-input w-full px-4 py-3 text-gray-700 placeholder-gray-500" placeholder="Ex: voo, família, casa, água">
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition-all">
+                        <span id="submitButtonText">Salvar Sonho</span>
+                    </button>
+                    <button type="button" onclick="closeDreamModal()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // ============ CONFIGURAÇÃO DO SUPABASE ============
+        const SUPABASE_URL = 'https://sdegtudaghtsdtubcmiu.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkZWd0dWRhZ2h0c2R0dWJjbWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMzEwNTksImV4cCI6MjA2NTcwNzA1OX0.sN-SljSIgDY4Ey6iWhIgwoa2a8ebnxr0keT918gpNxM'
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        let currentUser = null;
+        let allDreams = [];
+        
+        // ============ INICIALIZAÇÃO ============
+        async function init() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = session.user;
+                document.getElementById('welcomeMessage').textContent = `Olá, ${currentUser.user_metadata?.name || currentUser.email}!`;
+                
+                // Definir data padrão como hoje
+                document.getElementById('dreamDate').valueAsDate = new Date();
+                
+                await loadDreams();
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showNotification('Erro ao carregar dashboard', 'error');
+            }
+        }
+        
+        // ============ CARREGAR SONHOS ============
+        async function loadDreams() {
+            try {
+                const { data: dreams, error } = await supabase
+                    .from('dreams')
+                    .select('*')
+                    .order('dream_date', { ascending: false });
+                
+                if (error) throw error;
+                
+                allDreams = dreams || [];
+                updateDashboardStats();
+                renderDreams();
+                
+            } catch (error) {
+                console.error('Erro ao carregar sonhos:', error);
+                showNotification('Erro ao carregar sonhos', 'error');
+            }
+        }
+        
+        // ============ ESTATÍSTICAS DO DASHBOARD ============
+        function updateDashboardStats() {
+            const total = allDreams.length;
+            const good = allDreams.filter(d => d.mood === 'bom').length;
+            const confused = allDreams.filter(d => d.mood === 'confuso').length;
+            const bad = allDreams.filter(d => d.mood === 'ruim').length;
+            const lucid = allDreams.filter(d => d.lucid).length;
+            
+            document.getElementById('totalDreams').textContent = total;
+            document.getElementById('goodDreams').textContent = good;
+            document.getElementById('confusedDreams').textContent = confused;
+            document.getElementById('badDreams').textContent = bad;
+            document.getElementById('lucidDreams').textContent = lucid;
+            
+            // Análise da qualidade do sono
+            const avgQuality = total > 0 ? allDreams.reduce((acc, d) => acc + (d.sleep_quality || 3), 0) / total : 0;
+            const qualityPercentage = (avgQuality / 5) * 100;
+            
+            document.getElementById('qualityBar').style.width = qualityPercentage + '%';
+            document.getElementById('qualityText').textContent = `${avgQuality.toFixed(1)}/5`;
+            
+            // Status do sono
+            let sleepStatus, sleepEmoji;
+            if (avgQuality >= 4.5) {
+                sleepStatus = 'Excelente qualidade do sono!';
+                sleepEmoji = '😴✨';
+            } else if (avgQuality >= 3.5) {
+                sleepStatus = 'Boa qualidade do sono';
+                sleepEmoji = '😌';
+            } else if (avgQuality >= 2.5) {
+                sleepStatus = 'Qualidade moderada';
+                sleepEmoji = '😐';
+            } else {
+                sleepStatus = 'Precisa melhorar o sono';
+                sleepEmoji = '😴💤';
+            }
+            
+            document.getElementById('sleepStatus').textContent = sleepStatus;
+            document.getElementById('sleepEmoji').textContent = sleepEmoji;
+            
+            // Porcentagem de sonhos lúcidos
+            const lucidPercentage = total > 0 ? ((lucid / total) * 100).toFixed(1) : 0;
+            document.getElementById('lucidPercentage').textContent = `${lucidPercentage}%`;
+        }
+        
+        // ============ RENDERIZAR SONHOS ============
+        function renderDreams(dreamsToRender = allDreams) {
+            const container = document.getElementById('dreamsContainer');
+            
+            if (dreamsToRender.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="text-6xl mb-4">🌙</div>
+                        <p class="text-lg">Nenhum sonho encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = dreamsToRender.map(dream => `
+                <div class="dream-card neomorphism-element p-6 mood-${dream.mood}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">${dream.title}</h4>
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>${formatDate(dream.dream_date)}</span>
+                                <span class="flex items-center">
+                                    ${getMoodEmoji(dream.mood)} ${dream.mood}
+                                </span>
+                                <span>${'⭐'.repeat(dream.sleep_quality || 3)}</span>
+                                ${dream.lucid ? '<span>🧠 Lúcido</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editDream('${dream.id}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors">
+                                ✏️
+                            </button>
+                            <button onclick="deleteDream('${dream.id}')" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${dream.description ? `<p class="text-gray-700 mb-3 leading-relaxed">${dream.description}</p>` : ''}
+                    
+                    ${dream.tags && dream.tags.length > 0 ? `
+                        <div class="flex flex-wrap gap-2">
+                            ${dream.tags.map(tag => `
+                                <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">${tag}</span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+
+        function showAddDreamModal() {
+            document.getElementById('modalTitle').textContent = 'Novo Sonho';
+            document.getElementById('submitButtonText').textContent = 'Salvar Sonho';
+            document.getElementById('dreamForm').reset();
+            document.getElementById('dreamId').value = '';
+            document.getElementById('dreamDate').valueAsDate = new Date();
+            resetStarRating();
+            resetMoodSelection();
+            document.getElementById('dreamModal').classList.remove('hidden');
+            document.getElementById('dreamModal').classList.add('flex');
+        }
+        
+        function closeDreamModal() {
+            document.getElementById('dreamModal').classList.add('hidden');
+            document.getElementById('dreamModal').classList.remove('flex');
+        }
+        
+        // ============ CRUD OPERATIONS ============
+        async function saveDream(dreamData) {
+            try {
+                if (dreamData.id) {
+                    // Update
+                    const { error } = await supabase
+                        .from('dreams')
+                        .update(dreamData)
+                        .eq('id', dreamData.id);
+                    
+                    if (error) throw error;
+                    showNotification('Sonho atualizado com sucesso!');
+                } else {
+                    // Create
+                    delete dreamData.id;
+                    const { error } = await supabase
+                        .from('dreams')
+                        .insert([{ ...dreamData, user_id: currentUser.id }]);
+                    
+                    if (error) throw error;
+                    showNotification('Sonho salvo com sucesso!');
+                }
+                
+                await loadDreams();
+                closeDreamModal();
+                
+            } catch (error) {
+                console.error('Erro ao salvar sonho:', error);
+                showNotification('Erro ao salvar sonho: ' + error.message, 'error');
+            }
+        }
+        
+        async function editDream(dreamId) {
+            try {
+                const dream = allDreams.find(d => d.id === dreamId);
+                if (!dream) return;
+                
+                document.getElementById('modalTitle').textContent = 'Editar Sonho';
+                document.getElementById('submitButtonText').textContent = 'Atualizar Sonho';
+                
+                // Preencher formulário
+                document.getElementById('dreamId').value = dream.id;
+                document.getElementById('dreamTitle').value = dream.title;
+                document.getElementById('dreamDate').value = dream.dream_date;
+                document.getElementById('dreamDescription').value = dream.description || '';
+                document.getElementById('dreamTags').value = dream.tags ? dream.tags.join(', ') : '';
+                document.getElementById('isLucid').checked = dream.lucid;
+                
+                // Definir mood
+                const moodRadio = document.querySelector(`input[name="mood"][value="${dream.mood}"]`);
+                if (moodRadio) {
+                    moodRadio.checked = true;
+                    updateMoodSelection();
+                }
+                
+                // Definir qualidade do sono
+                setStarRating(dream.sleep_quality || 3);
+                
+                document.getElementById('dreamModal').classList.remove('hidden');
+                document.getElementById('dreamModal').classList.add('flex');
+                
+            } catch (error) {
+                console.error('Erro ao carregar sonho para edição:', error);
+                showNotification('Erro ao carregar sonho', 'error');
+            }
+        }
+        
+        async function deleteDream(dreamId) {
+            if (!confirm('Tem certeza que deseja deletar este sonho?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('dreams')
+                    .delete()
+                    .eq('id', dreamId);
+                
+                if (error) throw error;
+                
+                showNotification('Sonho deletado com sucesso!');
+                await loadDreams();
+                
+            } catch (error) {
+                console.error('Erro ao deletar sonho:', error);
+                showNotification('Erro ao deletar sonho: ' + error.message, 'error');
+            }
+        }
+        
+        function setupEventListeners() {
+            // Formulário de sonho
+            document.getElementById('dreamForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    id: document.getElementById('dreamId').value || null,
+                    title: document.getElementById('dreamTitle').value,
+                    dream_date: document.getElementById('dreamDate').value,
+                    description: document.getElementById('dreamDescription').value,
+                    mood: document.querySelector('input[name="mood"]:checked')?.value,
+                    sleep_quality: parseInt(document.getElementById('sleepQuality').value),
+                    lucid: document.getElementById('isLucid').checked,
+                    tags: document.getElementById('dreamTags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+                    updated_at: new Date().toISOString()
+                };
+                
+                if (!formData.mood) {
+                    showNotification('Por favor, selecione como foi o sonho', 'error');
+                    return;
+                }
+                
+                await saveDream(formData);
+            });
+            
+            // Star rating
+            document.querySelectorAll('.star-rating').forEach(star => {
+                star.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const rating = parseInt(star.dataset.rating);
+                    setStarRating(rating);
+                });
+            });
+            
+            // Mood selection
+            document.querySelectorAll('input[name="mood"]').forEach(radio => {
+                radio.addEventListener('change', updateMoodSelection);
+            });
+            
+            // Fechar modal clicando fora
+            document.getElementById('dreamModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeDreamModal();
+                }
+            });
+        }
+        
+        function setStarRating(rating) {
+            document.getElementById('sleepQuality').value = rating;
+            document.querySelectorAll('.star-rating').forEach((star, index) => {
+                star.classList.toggle('text-yellow-400', index < rating);
+                star.classList.toggle('text-gray-300', index >= rating);
+            });
+        }
+        
+        function resetStarRating() {
+            setStarRating(3);
+        }
+        
+        function updateMoodSelection() {
+            document.querySelectorAll('label:has(input[name="mood"])').forEach(label => {
+                const radio = label.querySelector('input[name="mood"]');
+                label.classList.toggle('bg-white/50', radio.checked);
+                label.classList.toggle('border-purple-400', radio.checked);
+            });
+        }
+        
+        function resetMoodSelection() {
+            document.querySelectorAll('label:has(input[name="mood"])').forEach(label => {
+                label.classList.remove('bg-white/50', 'border-purple-400');
+            });
+        }
+        
+        function filterDreams() {
+            const filter = document.getElementById('filterMood').value;
+            const filtered = filter ? allDreams.filter(dream => dream.mood === filter) : allDreams;
+            renderDreams(filtered);
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('pt-BR');
+        }
+        
+        function getMoodEmoji(mood) {
+            const emojis = { bom: '😊', confuso: '😕', ruim: '😰' };
+            return emojis[mood] || '😐';
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+        
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro no logout:', error);
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>

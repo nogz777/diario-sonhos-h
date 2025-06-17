@@ -1,0 +1,32 @@
+🌙 Diário de Sonhos
+Sistema web para registrar e acompanhar sonhos.
+O que faz
+
+Cadastro e login de usuários
+Registrar sonhos com título, data e descrição
+Ver histórico de sonhos
+Editar e deletar registros
+Mostrar estatísticas do sono
+
+Tecnologias
+
+HTML, CSS, JavaScript
+Tailwind CSS
+Supabase
+
+Arquivos
+
+index.html - Página inicial
+login.html - Login e cadastro
+dashboard.html - Dashboard principal
+
+**Como usar**
+
+Abra index.html
+Cadastre-se ou faça login
+Adicione seus sonhos
+Visualize estatísticas
+
+
+Aluno: [Seu Nome]
+Curso: [Seu Curso]
